@@ -1,0 +1,14 @@
+<launch>
+
+  <env name="GSCAM_CONFIG" value="udpsrc port=9001 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert" />
+
+  <!-- Convert stream to ROS images -->
+  <group ns="stereo">
+  <node pkg="gscam" type="gscam" name="right_cam">
+    <param name="camera_name" value="right_cam" />
+    <param name="camera_info_url" value="package://orca_stereo/params/right.yaml" />
+    <remap from="camera/image_raw" to="right/image_raw" /> <!-- side effect: remaps all -->
+  </node>
+  </group>
+
+</launch>
