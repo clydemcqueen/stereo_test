@@ -1,0 +1,96 @@
+<launch>
+
+  <arg name="manager_name" default="pipeline" />
+  <arg name="approximate_sync" default="true" />
+  <arg name="queue_size" default="30" />
+
+  <group ns="stereo">
+
+    <!-- Nodelet manager -->
+    <node pkg="nodelet" type="nodelet" name="$(arg manager_name)"  args="manager"/>
+
+    <!-- Left -->
+
+    <!-- ROS images -->
+    <node pkg="nodelet" type="nodelet" name="left_cam" args="load gscam/GSCamNodelet $(arg manager_name) --no-bond">
+      <param name="camera_name" value="left_cam" />
+      <param name="camera_info_url" value="package://orca_stereo/params/left.yaml" />
+      <param name="frame_id" value="left_camera_frame" />
+      <param name="gscam_config" value="udpsrc port=9002 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert" />
+      <remap from="camera/image_raw" to="left/image_raw" />
+      <remap from="camera/camera_info" to="left/camera_info" />
+      <remap from="set_camera_info" to="left/set_camera_info" />
+    </node>
+
+    <!-- Debayered images -->
+    <node pkg="nodelet" type="nodelet" name="debayer_left" args="load image_proc/debayer $(arg manager_name) --no-bond">
+      <remap from="image_raw" to="left/image_raw" />
+      <remap from="image_mono" to="left/image_mono" />
+      <remap from="image_color" to="left/image_color" />
+    </node>
+
+    <!-- Monochrome rectified image -->
+    <node pkg="nodelet" type="nodelet" name="rectify_mono_left" args="load image_proc/rectify $(arg manager_name) --no-bond">
+      <remap from="image_mono" to="left/image_mono" />
+      <remap from="camera_info" to="left/camera_info" />
+      <remap from="image_rect" to="left/image_rect" />
+    </node>
+
+    <!-- Color rectified image -->
+    <node pkg="nodelet" type="nodelet" name="rectify_color_left" args="load image_proc/rectify $(arg manager_name) --no-bond">
+      <remap from="image_mono" to="left/image_color" />
+      <remap from="camera_info" to="left/camera_info" />
+      <remap from="image_rect" to="left/image_rect_color" />
+    </node>
+
+    <!-- Right -->
+
+    <!-- ROS images -->
+    <node pkg="nodelet" type="nodelet" name="right_cam" args="load gscam/GSCamNodelet $(arg manager_name) --no-bond">
+      <param name="camera_name" value="right_cam" />
+      <param name="camera_info_url" value="package://orca_stereo/params/right.yaml" />
+      <param name="frame_id" value="right_camera_frame" />
+      <param name="gscam_config" value="udpsrc port=9001 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert" />
+      <remap from="camera/image_raw" to="right/image_raw" />
+      <remap from="camera/camera_info" to="right/camera_info" />
+      <remap from="set_camera_info" to="right/set_camera_info" />
+    </node>
+
+    <!-- Debayered images -->
+    <node pkg="nodelet" type="nodelet" name="debayer_right" args="load image_proc/debayer $(arg manager_name) --no-bond">
+      <remap from="image_raw" to="right/image_raw" />
+      <remap from="image_mono" to="right/image_mono" />
+      <remap from="image_color" to="right/image_color" />
+    </node>
+
+    <!-- Monochrome rectified image -->
+    <node pkg="nodelet" type="nodelet" name="rectify_mono_right" args="load image_proc/rectify $(arg manager_name) --no-bond">
+      <remap from="image_mono" to="right/image_mono" />
+      <remap from="camera_info" to="right/camera_info" />
+      <remap from="image_rect" to="right/image_rect" />
+    </node>
+
+    <!-- Color rectified image -->
+    <node pkg="nodelet" type="nodelet" name="rectify_color_right" args="load image_proc/rectify $(arg manager_name) --no-bond">
+      <remap from="image_mono" to="right/image_color" />
+      <remap from="camera_info" to="right/camera_info" />
+      <remap from="image_rect" to="right/image_rect_color" />
+    </node>
+
+    <!-- Stereo -->
+
+    <!-- Disparity image -->
+    <node pkg="nodelet" type="nodelet" name="disparity" args="load stereo_image_proc/disparity $(arg manager_name) --no-bond">
+      <param name="approximate_sync" value="$(arg approximate_sync)" />
+      <param name="queue_size" value="$(arg queue_size)" />
+    </node>
+
+    <!-- PointCloud2 -->
+    <node pkg="nodelet" type="nodelet" name="point_cloud2" args="load stereo_image_proc/point_cloud2 $(arg manager_name) --no-bond">
+      <param name="approximate_sync" value="$(arg approximate_sync)" />
+      <param name="queue_size" value="$(arg queue_size)" />
+    </node>
+
+  </group>
+
+</launch>
