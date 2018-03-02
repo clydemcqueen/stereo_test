@@ -1,5 +1,8 @@
 <launch>
 
+  <include file="$(find orca_stereo)/launch/left.launch" />
+  <include file="$(find orca_stereo)/launch/right.launch" />
+
   <group ns="stereo">
     <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
       <param name="approximate_sync" value="true" />
